@@ -4,8 +4,18 @@ import './index.css';
 // import App from './App';
 // import reportWebVitals from './reportWebVitals';
 
+const StarsDisplay = (props) => (
+    <>
+        {utils.range(1, props.count).map(starId =>
+            <div key={starId} className={"star"}></div>
+        )}
+    </>
+);
+
 const PlayNumber = (props) => (
-    <button className={"number"}>{props.number}</button>
+    <button className={"number"} onClick={() => console.log('Num', props.number)}>
+        {props.number}
+    </button>
 );
 
 const StarMatch = () => {
@@ -17,9 +27,7 @@ const StarMatch = () => {
             </div>
             <div className="body">
                 <div className="left">
-                    {utils.range(1, stars).map(starId =>
-                        <div key={starId} className={"star"}></div>
-                    )}
+                    <StarsDisplay count={stars}/>
                 </div>
                 <div className="right">
                     {utils.range(1, 9).map(number =>
