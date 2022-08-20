@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-// import App from './App';
-// import reportWebVitals from './reportWebVitals';
+
 
 const StarsDisplay = (props) => (
     <>
@@ -34,60 +33,83 @@ const PlayAgain = (props) => (
     </div>
 );
 
-const Game = (props) => {
+//Custom Hook
+const useGameState = () => {
     const [stars, setStars] = useState(utils.random(1, 9));
     const [availableNumbers, setAvailableNumbers] = useState(utils.range(1, 9));
     const [candidateNumbers, setCandidateNumbers] = useState([]);
     const [secondsLeft, setSecondsLeft] = useState(15);
+
     useEffect(() => {
-        if (secondsLeft > 0 && availableNumbers.length > 0) {
+        if (secondsLeft > 0 && availableNumbers.length > 0)
+        {
             const timerId = setTimeout(() => {
                 setSecondsLeft(secondsLeft - 1);
             }, 1000);
+
             return () => clearTimeout(timerId);
         }
     });
 
+    const setGameState = (newCandidateNumbers) => {
+        if (utils.sum(newCandidateNumbers) !== stars)
+        {
+            setCandidateNumbers(newCandidateNumbers);
+        }
+        else
+        {
+            const newAvailableNumbers = availableNumbers.filter(
+                n => !newCandidateNumbers.includes(n)
+            );
+
+            setStars(utils.randomSumIn(newAvailableNumbers, 9));
+            setAvailableNumbers(newAvailableNumbers);
+            setCandidateNumbers([]);
+        }
+    };
+
+    return { stars, availableNumbers, candidateNumbers, secondsLeft, setGameState };
+};
+
+const Game = (props) => {
+    const {
+        stars,
+        availableNumbers,
+        candidateNumbers,
+        secondsLeft,
+        setGameState,
+    } = useGameState();
+
     const candidatesAreWrong = utils.sum(candidateNumbers) > stars;
-
     const gameStatus = availableNumbers.length === 0
-        ? 'won'
-        : secondsLeft === 0 ? 'lost' : 'active';
+        ? 'won' : secondsLeft === 0 ? 'lost' : 'active';
 
-    // const resetGame = () => {
-    //     setStars(utils.random(1, 9));
-    //     setAvailableNumbers(utils.range(1, 9));
-    //     setCandidateNumbers([]);
-    // };
 
     const numberStatus = (number) => {
-        if (!availableNumbers.includes(number)) {
+        if (!availableNumbers.includes(number))
+        {
             return 'used';
         }
-        if (candidateNumbers.includes(number)) {
+        if (candidateNumbers.includes(number))
+        {
             return candidatesAreWrong ? 'wrong' : 'candidate';
         }
+
         return 'available';
     };
 
     const onNumberClick = (number, currentStatus) => {
-        if (gameStatus !== 'active' || currentStatus === 'used') {
+        if (gameStatus !== 'active' || currentStatus === 'used')
+        {
             return;
         }
         const newCandidateNumbers =
             currentStatus === 'available'
                 ? candidateNumbers.concat(number)
                 : candidateNumbers.filter(cn => cn !== number);
-        if (utils.sum(newCandidateNumbers) !== stars) {
-            setCandidateNumbers(newCandidateNumbers);
-        } else {
-            const newAvailableNumbers = availableNumbers.filter(
-                n => !newCandidateNumbers.includes(n)
-            );
-            setStars(utils.randomSumIn(newAvailableNumbers, 9));
-            setAvailableNumbers(newAvailableNumbers);
-            setCandidateNumbers([]);
-        }
+
+        setGameState(newCandidateNumbers);
+
     };
 
     return (
@@ -169,11 +191,6 @@ root.render(
       <>
           <StarMatch />
       </>
-    {/*s*/}
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-// reportWebVitals();
